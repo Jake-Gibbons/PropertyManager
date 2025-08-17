@@ -1,32 +1,23 @@
-//
-//  PropertyManagerApp.swift
-//  PropertyManager
-//
-//  Created by Jake Gibbons on 14/08/2025.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
 struct PropertyManagerApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @StateObject private var notifications = NotificationManager()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(notifications)
+                .onAppear { notifications.requestAuthorization() }
+                .modelContainer(for: [
+                    Property.self,
+                    MaintenanceTask.self,
+                    DocumentItem.self,
+                    UtilityAccount.self,
+                    InventoryItem.self,
+                    FloorRoom.self
+                ])
         }
-        .modelContainer(sharedModelContainer)
     }
 }

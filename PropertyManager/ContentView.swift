@@ -1,61 +1,29 @@
-//
-//  ContentView.swift
-//  PropertyManager
-//
-//  Created by Jake Gibbons on 14/08/2025.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    init() {
+        UITabBar.appearance().unselectedItemTintColor = UIColor(Theme.subtext)
+        UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.text)]
+        UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor(Theme.text)]
+    }
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
+        TabView {
+            DashboardView()
+                .tabItem { Label("Dashboard", systemImage: "house") }
+            TasksView()
+                .tabItem { Label("Tasks", systemImage: "checklist") }
+            InventoryView()
+                .tabItem { Label("Inventory", systemImage: "shippingbox") }
+            DocumentsView()
+                .tabItem { Label("Documents", systemImage: "doc") }
+            UtilitiesView()
+                .tabItem { Label("Utilities", systemImage: "bolt") }
+            FloorplanView()
+                .tabItem { Label("Floorplan", systemImage: "square.grid.3x3") }
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gear") }
         }
+        .screenBackground()
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
