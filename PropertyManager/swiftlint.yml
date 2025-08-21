@@ -1,0 +1,15 @@
+disabled_rules:
+  - line_length
+  - trailing_whitespace
+
+opt_in_rules:
+  - unused_closure_parameter
+
+excluded:
+  - Pods
+  - Carthage
+  - .build
+  - Scripts
+
+force_cast: warning
+force_unwrapping: warning

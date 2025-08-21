@@ -9,7 +9,11 @@ struct PropertyManagerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(notifications)
-                .onAppear { notifications.requestAuthorization() }
+                .onAppear {
+                    Task {
+                        await notifications.requestAuthorization()
+                    }
+                }
                 .modelContainer(for: [
                     Property.self,
                     MaintenanceTask.self,

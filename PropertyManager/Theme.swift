@@ -1,66 +1,86 @@
 import SwiftUI
 
 enum Theme {
-    static let accent = Color(hex: "#6C8EF5")
-    static let bg = Color(hex: "#0D1117")
-    static let card = Color(hex: "#161B22")
-    static let text = Color.white
-    static let subtext = Color.white.opacity(0.7)
-    static let skeleton = Color.white.opacity(0.08)
-    static let outline = Color.white.opacity(0.08)
-    static let cornerRadius: CGFloat = 16
-    static let shadow = Color.black.opacity(0.35)
+    // Text colors (aliases to match existing code references)
+    static let text = Color.primary
+    static let textPrimary = Color.primary
+    static let subtext = Color.secondary
+    static let danger = Color.red
+
+    // Neutral, professional surfaces using system palette so no asset bundle is required
+    #if canImport(UIKit)
+    static let background = Color(.systemGroupedBackground)
+    static let surface = Color(.secondarySystemBackground)
+    static let accent = Color(.systemBlue)
+    static let accentSecondary = Color(.systemIndigo)
+    #else
+    static let background = Color(.init(white: 0.97))
+    static let surface = Color(.init(white: 0.99))
+    static let accent = Color.blue
+    static let accentSecondary = Color.purple
+    #endif
+
+    static let skeleton = Color(white: 0.92)
 }
 
+extension Color {
+    static let tmBackground = Theme.background
+    static let tmSurface = Theme.surface
+    static let tmAccent = Theme.accent
+}
+
+// Card container used throughout the app for a consistent elevated surface.
+// Uses system colors rather than `.ultraThinMaterial` to avoid material resolution issues on older SDKs.
 struct ThemedCard<Content: View>: View {
-    let content: Content
-    init(@ViewBuilder content: () -> Content) { self.content = content() }
+    var cornerRadius: CGFloat = 12
+    var content: () -> Content
+
+    init(cornerRadius: CGFloat = 12, @ViewBuilder content: @escaping () -> Content) {
+        self.cornerRadius = cornerRadius
+        self.content = content
+    }
+
     var body: some View {
-        content
-            .padding(14)
-            .background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(Theme.outline))
-            .shadow(color: Theme.shadow, radius: 10, x: 0, y: 6)
+        VStack {
+            content()
+        }
+        .padding()
+        .background(Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(Color.black.opacity(0.03), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
     }
 }
 
-extension View {
-    func screenBackground() -> some View {
-        self
-            .background(Theme.bg.ignoresSafeArea())
-            .tint(Theme.accent)
-            .foregroundStyle(Theme.text)
-    }
-    func sectionHeader(_ title: String, systemImage: String? = nil) -> some View {
-        modifier(SectionHeader(title: title, symbol: systemImage))
-    }
-}
-
-private struct SectionHeader: ViewModifier {
-    let title: String; let symbol: String?
-    func body(content: Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                if let symbol { Image(systemName: symbol) }
-                Text(title)
-                    .font(.system(.title3, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Theme.subtext)
+// Small skeleton used during loading
+struct SkeletonRowCard: View {
+    var lines: Int = 2
+    var body: some View {
+        ThemedCard {
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: 4).fill(Theme.skeleton).frame(height: 14)
+                ForEach(0..<lines, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 4).fill(Theme.skeleton).frame(height: 10)
+                }
             }
-            content
         }
     }
 }
 
-extension Color {
-    init(hex: String) {
-        var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if s.hasPrefix("#") { s.removeFirst() }
-        var v: UInt64 = 0
-        Scanner(string: s).scanHexInt64(&v)
-        let r = Double((v >> 16) & 0xFF) / 255
-        let g = Double((v >> 8) & 0xFF) / 255
-        let b = Double(v & 0xFF) / 255
-        self = Color(red: r, green: g, blue: b)
+struct SkeletonList: View {
+    var count: Int = 5
+    var body: some View {
+        VStack(spacing: 12) { ForEach(0..<count, id: \.self) { _ in SkeletonRowCard(lines: Int.random(in: 1...3)) } }
+    }
+}
+
+// Convenient modifier for app background - use Theme.background and ignore safe area properly.
+extension View {
+    func screenBackground() -> some View {
+        self
+            .background(Theme.background.ignoresSafeArea())
     }
 }
